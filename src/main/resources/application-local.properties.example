@@ -1,0 +1,10 @@
+# Copie para application-local.properties (gitignored).
+#
+# Recomendado: "Shared Pooler" / Session pooler (IPv4) no painel Supabase.
+# Utilizador \u00e9 postgres.<PROJECT_REF>, n\u00e3o s\u00f3 "postgres".
+#
+# Direct connection (db.<ref>.supabase.co) pode falhar em redes s\u00f3 IPv4 ou com DNS restrito.
+
+spring.datasource.url=jdbc:postgresql://aws-1-sa-east-1.pooler.supabase.com:5432/postgres?sslmode=require
+spring.datasource.username=postgres.uzcslldblziezlealehf
+spring.datasource.password=COLOQUE_A_SENHA_DO_POSTGRES_AQUI
