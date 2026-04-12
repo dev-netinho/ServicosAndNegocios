@@ -24,8 +24,8 @@ Este documento resume o que foi configurado e implementado para o projeto **Serv
 
 ## 3. Base de dados (Supabase / Grupo 1)
 
-- O schema oficial está descrito em **`deefy_schema.sql`** na raiz (tabela **`musica`**, colunas `titulo`, `artista`, `genero`, `duracao`, etc.).
-- A entidade JPA **`com.deefy.group2.model.Music`** mapeia `musica` com nomes Java em inglês (`title`, `artist`, `genre`) e `@Column` para os nomes reais em SQL.
+- O schema oficial está em **`deefy_schema.sql`** na raiz (ex.: **`musica`**: `titulo`, `genero`, `duracao`, `deezerid`, `album_id`, etc.; nome do artista via **`album`** → **`artista`**).
+- As entidades JPA **`Music`**, **`Album`** e **`Artist`** mapeiam `musica`, `album` e `artista`; em Java usamos nomes em inglês onde faz sentido (`title`, `genre`, …) com `@Column` para os nomes físicos no PostgreSQL.
 - **`spring.jpa.hibernate.ddl-auto=none`** — o Hibernate **não cria nem altera** tabelas; quem manda no schema é o Grupo 1 / scripts SQL.
 
 ### 3.1 Ligação JDBC (importante)
@@ -81,7 +81,7 @@ $env:JAVA_HOME = "<caminho_do_JDK>"   # se necessário
 | Parâmetro | Exemplo | Efeito |
 |-----------|---------|--------|
 | `title` | `shape` | `LIKE` case-insensitive em `titulo` |
-| `artist` | `Queen` | idem em `artista` |
+| `artist` | `Queen` | `LIKE` no nome do artista (`artista.nome`, via `album`) |
 | `genre` | `Rock` | idem em `genero` |
 
 - **Nenhum filtro preenchido** (ou só strings vazias): devolve **até 50** músicas, ordenadas por título (pré-visualização do catálogo / Swagger).
@@ -100,8 +100,7 @@ $env:JAVA_HOME = "<caminho_do_JDK>"   # se necessário
       "durationSeconds": 354,
       "previewUrl": null,
       "coverUrl": null,
-      "externalId": "...",
-      "createdAt": "..."
+      "externalId": "..."
     }
   ],
   "count": 1
@@ -128,6 +127,8 @@ src/main/java/com/deefy/group2/
 │   ├── MusicResponseDto.java
 │   └── MusicSearchResponseDto.java
 ├── model/
+│   ├── Artist.java                     # @Table(name = "artista")
+│   ├── Album.java                      # @Table(name = "album")
 │   └── Music.java                      # @Table(name = "musica")
 ├── repository/
 │   ├── MusicRepository.java            # JpaRepository + JpaSpecificationExecutor
@@ -164,7 +165,7 @@ Foram adicionados **`mvnw`**, **`mvnw.cmd`** e **`.mvn/wrapper/maven-wrapper.pro
 ## 9. Integração com outros grupos
 
 - **Grupo 3 / Frontend:** consomem esta API por **HTTP + JSON**; o contrato atual da busca é o descrito na secção 5. Ajustes devem ser alinhados e, se possível, refletidos no OpenAPI.
-- **Grupo 1:** alterações na tabela `musica` (nomes/tipos de colunas) exigem atualizar a entidade `Music` e, se necessário, DTOs e testes.
+- **Grupo 1:** alterações em `musica`, `album` ou `artista` exigem atualizar as entidades correspondentes, `MusicSpecifications` (filtro por artista), DTOs e testes.
 
 ---
 

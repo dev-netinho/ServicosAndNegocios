@@ -1,6 +1,10 @@
 package com.deefy.group2.repository;
 
+import com.deefy.group2.model.Album;
+import com.deefy.group2.model.Artist;
 import com.deefy.group2.model.Music;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -24,7 +28,9 @@ public final class MusicSpecifications {
                 parts.add(cb.like(cb.lower(root.get("title")), likePattern(title), '\\'));
             }
             if (artist != null) {
-                parts.add(cb.like(cb.lower(root.get("artist")), likePattern(artist), '\\'));
+                Join<Music, Album> albumJoin = root.join("album", JoinType.LEFT);
+                Join<Album, Artist> artistJoin = albumJoin.join("artist", JoinType.LEFT);
+                parts.add(cb.like(cb.lower(artistJoin.get("nome")), likePattern(artist), '\\'));
             }
             if (genre != null) {
                 parts.add(cb.like(cb.lower(root.get("genre")), likePattern(genre), '\\'));

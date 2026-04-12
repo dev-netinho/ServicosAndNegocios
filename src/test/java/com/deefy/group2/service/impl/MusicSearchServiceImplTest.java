@@ -1,6 +1,8 @@
 package com.deefy.group2.service.impl;
 
 import com.deefy.group2.dto.response.MusicSearchResponseDto;
+import com.deefy.group2.model.Album;
+import com.deefy.group2.model.Artist;
 import com.deefy.group2.model.Music;
 import com.deefy.group2.repository.MusicRepository;
 import org.junit.jupiter.api.Test;
@@ -30,10 +32,16 @@ class MusicSearchServiceImplTest {
     @InjectMocks
     private MusicSearchServiceImpl musicSearchService;
 
+    private static Music sampleMusic(String title) {
+        Artist band = new Artist(1L, "Band");
+        Album album = new Album(1L, "LP", band);
+        return new Music(1L, title, "Rock", 180, album);
+    }
+
     @Test
     void search_semCriterios_retornaAte50DoCatalogo() {
         when(musicRepository.findAll(any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(new Music(1L, "A Song", "Band", "Rock", 180))));
+                .thenReturn(new PageImpl<>(List.of(sampleMusic("A Song"))));
 
         MusicSearchResponseDto out = musicSearchService.search("  ", null, "");
 
@@ -46,7 +54,7 @@ class MusicSearchServiceImplTest {
     @Test
     void search_comTitulo_usaSpecification() {
         when(musicRepository.findAll(any(Specification.class), any(Sort.class)))
-                .thenReturn(List.of(new Music(1L, "Rock Song", "Band", "Rock", 180)));
+                .thenReturn(List.of(sampleMusic("Rock Song")));
 
         MusicSearchResponseDto out = musicSearchService.search("rock", null, null);
 

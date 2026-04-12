@@ -26,6 +26,7 @@ public class MusicSearchController {
     @Operation(
             summary = "Buscar m\u00fasicas",
             description = "Par\u00e2metros em ingl\u00eas: title, artist, genre. Com filtros: AND entre os preenchidos (LIKE, sem diferenciar mai\u00fasculas). "
+                    + "O artista corresponde ao nome do artista do \u00e1lbum (schema: album \u2192 artista). "
                     + "Sem nenhum filtro: devolve at\u00e9 50 faixas do cat\u00e1logo ordenadas por t\u00edtulo.")
     public MusicSearchResponseDto search(
             @Parameter(description = "Trecho do t\u00edtulo (case-insensitive)")

@@ -2,8 +2,6 @@ package com.deefy.group2.dto.response;
 
 import com.deefy.group2.model.Music;
 
-import java.time.Instant;
-
 public record MusicResponseDto(
         Long id,
         String title,
@@ -12,8 +10,7 @@ public record MusicResponseDto(
         Integer durationSeconds,
         String previewUrl,
         String coverUrl,
-        String externalId,
-        Instant createdAt) {
+        String externalId) {
 
     public static MusicResponseDto from(Music music) {
         return new MusicResponseDto(
@@ -24,7 +21,6 @@ public record MusicResponseDto(
                 music.getDurationSeconds(),
                 music.getPreviewUrl(),
                 music.getCoverUrl(),
-                music.getExternalId(),
-                music.getCreatedAt());
+                music.getExternalId());
     }
 }
