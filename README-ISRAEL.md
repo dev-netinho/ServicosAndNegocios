@@ -184,15 +184,59 @@ Foram adicionados **`mvnw`**, **`mvnw.cmd`** e **`.mvn/wrapper/maven-wrapper.pro
 
 ## 11. Responsabilidades (lembrar do guia do grupo)
 
-Pelo `docs/guia-desenvolvimento.md`, cada um implementa a sua parte. A **busca básica** neste repositório entra no escopo combinado para **Israel (busca e avaliação)**; **avaliação** ainda pode ser acrescentada em módulos à parte (`/api/v1/...`) sem colidir com este endpoint, desde que respeitem pacotes e revisão do Tech Lead.
+Pelo `docs/guia-desenvolvimento.md`, cada um implementa a sua parte. A **busca básica** e o **serviço de avaliação** neste repositório entram no escopo combinado para **Israel (busca e avaliação)**, respeitando pacotes e revisão do Tech Lead.
 
 ---
 
-## 12. Segurança
+## 12. Serviço de avaliação (implementado)
+
+Foi implementado o núcleo da avaliação em camada de serviço, sem mexer em estrutura de base de dados:
+
+- Serviço `MusicRatingService` com implementação `MusicRatingServiceImpl`.
+- Método `rateMusic(userId, musicId, score)` para criar ou atualizar a avaliação do par usuário+música.
+- Validação básica da nota por faixa em `MusicRatingScoreRange` (mínimo `1`, máximo `5`).
+- Bloqueio de notas inválidas com `InvalidMusicRatingScoreException`.
+- Bloqueio para música inexistente com `MusicNotFoundException`.
+- Retorno básico da avaliação com `MusicRatingResponseDto`, incluindo `updated` para diferenciar criação de atualização.
+
+### 12.1 Estrutura adicionada
+
+```text
+src/main/java/com/deefy/group2/
+├── dto/response/
+│   └── MusicRatingResponseDto.java
+├── exception/
+│   ├── InvalidMusicRatingScoreException.java
+│   └── MusicNotFoundException.java
+├── model/
+│   └── MusicRating.java
+├── repository/
+│   └── MusicRatingRepository.java
+└── service/
+    ├── MusicRatingScoreRange.java
+    ├── MusicRatingService.java
+    └── impl/
+        └── MusicRatingServiceImpl.java
+```
+
+### 12.2 Testes unitários adicionados
+
+- `src/test/java/com/deefy/group2/service/impl/MusicRatingServiceImplTest.java`
+- Coberturas básicas:
+  - nota nula;
+  - nota fora da faixa (`< 1` e `> 5`);
+  - música inexistente;
+  - criação de primeira avaliação (`updated = false`);
+  - atualização de avaliação existente (`updated = true`);
+  - aceitação dos limites (`1` e `5`).
+
+---
+
+## 13. Segurança
 
 - **Nunca** colocar passwords ou service_role keys em ficheiros versionados nem no `README`.
 - Se uma password foi exposta (chat, commit, print), **alterar na consola Supabase** e atualizar só o `application-local.properties` local.
 
 ---
 
-*Última atualização deste guia: alinhado ao estado do projeto com Spring Boot 3.5, JPA + PostgreSQL (Supabase pooler), busca com Specifications e Maven Wrapper.*
+*Última atualização deste guia: alinhado ao estado do projeto com Spring Boot 3.5, JPA + PostgreSQL (Supabase pooler), busca com Specifications, serviço de avaliação e Maven Wrapper.*
