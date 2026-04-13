@@ -1,69 +1,42 @@
 package com.deefy.group2.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-import java.time.LocalDateTime;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "usuario")
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // O novo banco usa SERIAL
     private Long id;
 
-    @Column(name = "nome", nullable = false, length = 150)
+    @Column(name = "nome", nullable = false, length = 100)
     private String name;
 
-    @Column(name = "email", nullable = false, unique = true, length = 255)
+    @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column(name = "senha", nullable = false, length = 255)
+    @Column(name = "senha", nullable = false, length = 100)
     private String password;
 
-    @Column(name = "tipo_usuario", nullable = false, length = 20)
-    private String userType;
+    // A MÁGICA DO RBAC AQUI: Ligando o usuário ao perfil
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "perfil_id")
+    private Perfil perfil;
 
-    @Column(name = "criado_em", nullable = false)
-    private LocalDateTime createdAt;
+    protected User() {}
 
-    protected User() {
-    }
-
-    public User(Long id, String name, String email, String password, String userType) {
-        this.id = id;
+    // O construtor agora recebe o Perfil em vez de uma String
+    public User(String name, String email, String password, Perfil perfil) {
         this.name = name;
         this.email = email;
         this.password = password;
-        this.userType = userType;
+        this.perfil = perfil;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getUserType() {
-        return userType;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    public Long getId() { return id; }
+    public String getName() { return name; }
+    public String getEmail() { return email; }
+    public String getPassword() { return password; }
+    public Perfil getPerfil() { return perfil; }
 }
