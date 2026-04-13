@@ -49,14 +49,9 @@ public class MusicRatingServiceImpl implements MusicRatingService {
         return MusicRatingResponseDto.from(saved, updated);
     }
 
-    private static MusicRating newRating(Long userId, Music music, Integer score, LocalDateTime ratedAt) {
-        MusicRating rating = new MusicRating();
-        rating.setUserId(userId);
-        rating.setMusic(music);
-        rating.setScore(score);
-        rating.setRatedAt(ratedAt);
-        return rating;
-    }
+private static MusicRating newRating(Long userId, Music music, Integer score, LocalDateTime ratedAt) {
+    return new MusicRating(null, userId, music, score, ratedAt);
+}
 
     private static void validateScore(Integer score) {
         if (score == null) {
