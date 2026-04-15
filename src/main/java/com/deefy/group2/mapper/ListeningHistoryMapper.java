@@ -15,11 +15,9 @@ public interface ListeningHistoryMapper {
     ListeningHistoryResponse toResponse(ListeningHistory entity);
 
 
-    @Mapping(source = "userId", target = "user.id")
-    @Mapping(source = "musicId", target = "music.id")
-    ListeningHistory toEntity(ListeningHistoryResponse dto);
-
-    @Mapping(source = "userId", target = "user.id")
-    @Mapping(source = "musicId", target = "music.id")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "music", ignore = true)
+    @Mapping(target = "dataHoraExecucao", ignore = true)
     ListeningHistory toEntity(ListeningHistoryRequest request);
 }
