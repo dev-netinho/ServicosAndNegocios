@@ -1,9 +1,16 @@
 package com.deefy.group2.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
+import com.deefy.group2.exception.HistoryNotFoundException;
+import com.deefy.group2.exception.MusicNotFoundException;
+import com.deefy.group2.exception.UserNotFoundException;
 import com.deefy.group2.mapper.ListeningHistoryMapper;
 import com.deefy.group2.model.ListeningHistory;
+import com.deefy.group2.model.Music;
+import com.deefy.group2.model.User;
 import org.springframework.stereotype.Service;
 
 import com.deefy.group2.dto.response.ListeningHistoryResponse;
@@ -30,22 +37,35 @@ public class ListeningHistoryServiceImpl implements ListeningHistoryService {
 
 	@Override
 	public ListeningHistoryResponse saveListeningHistory(ListeningHistoryRequest request) {
+        User user = userRepository.findById(request.userId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + request.userId()));
 
-        if (!userRepository.existsById(request.userId())) {
-            throw new IllegalArgumentException("User not found with id: " + request.userId());
-        }
-
-        if (!musicRepository.existsById(request.musicId())) {
-            throw new IllegalArgumentException("Music not found with id: " + request.musicId());
-        }
+        Music music = musicRepository.findById(request.musicId())
+                .orElseThrow(() -> new MusicNotFoundException(request.musicId()));
 
         LocalDateTime now = LocalDateTime.now();
 
         ListeningHistory saved = listeningHistoryMapper.toEntity(request);
+        saved.setUser(user);
+        saved.setMusic(music);
         saved.setDataHoraExecucao(now);
 
         ListeningHistory response = listeningHistoryRepository.save(saved);
 
         return listeningHistoryMapper.toResponse(response);
+    }
+
+
+    @Override
+    public List<ListeningHistoryResponse> getHistoryByUserId(Long userId) {
+        if  (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException("User not found with id: " + userId);
+        }
+
+        Optional<ListeningHistory> history = Optional.ofNullable(listeningHistoryRepository.findById(userId).orElseThrow(() -> new HistoryNotFoundException("not found")));
+
+        return history.stream()
+                .map(listeningHistoryMapper::toResponse)
+                .toList();
     }
 }
