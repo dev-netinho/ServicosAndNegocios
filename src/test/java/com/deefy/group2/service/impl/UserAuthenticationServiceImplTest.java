@@ -6,12 +6,16 @@ import com.deefy.group2.exception.CredenciaisInvalidasException;
 import com.deefy.group2.model.Perfil;
 import com.deefy.group2.model.User;
 import com.deefy.group2.repository.UserRepository;
+import com.deefy.group2.security.JwtService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import java.util.Optional;
 
@@ -19,65 +23,79 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
+
 @ExtendWith(MockitoExtension.class)
 class UserAuthenticationServiceImplTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserRepository userRepository; // Simula o banco de dados
+
+    @Mock
+    private JwtService jwtService; // Simula o gerador de tokens JWT
+
+    @Mock
+    private AuthenticationManager authenticationManager; // Simula o validador de senhas do Spring
 
     @InjectMocks
-    private UserAuthenticationServiceImpl authService;
+    private UserAuthenticationServiceImpl authService; // A classe que estamos testando de verdade
 
     @Test
-    @DisplayName("Deve autenticar com sucesso quando as credenciais forem válidas")
+    @DisplayName("Deve autenticar com sucesso e retornar o token real")
     void deveAutenticarComSucesso() {
-        // Preparação do cenário com um usuário existente no banco
-        Perfil perfilPremium = new Perfil("Premium"); // Nome conforme o script do banco
-        User usuarioValido = new User("João Souza", "joao@email.com", "123456", perfilPremium);
+        // Preparamos os dados de teste
+        Perfil perfil = new Perfil("Free");
+        User usuarioValido = User.builder()
+                .name("Saylon Batista")
+                .email("saylon@email.com")
+                .password("123456")
+                .perfil(perfil)
+                .build();
+        LoginRequest request = new LoginRequest("saylon@email.com", "123456");
 
-        // Simulamos que o repositório encontra o e-mail informado
-        when(userRepository.findByEmail("joao@email.com")).thenReturn(Optional.of(usuarioValido));
-        LoginRequest request = new LoginRequest("joao@email.com", "123456");
 
-        // Execução da lógica de login
+        // Quando o service procurar o e-mail, o banco responde com o usuário acima
+        when(userRepository.findByEmail(request.email())).thenReturn(Optional.of(usuarioValido));
+
+        // Quando o service pedir para gerar um token, o JwtService responde com uma string fixa
+        when(jwtService.generateToken(usuarioValido)).thenReturn("token-jwt-fake-123");
+
+        // Executar a ação de login
         LoginResponse response = authService.login(request);
 
-        // Validação do token e dados do perfil retornados
-        assertThat(response.token()).isEqualTo("token-provisorio-sprint1");
-        assertThat(response.username()).isEqualTo("João Souza [Premium]");
-        verify(userRepository, times(1)).findByEmail("joao@email.com");
+        // Verificamção dos resultados
+        assertThat(response.token()).isEqualTo("token-jwt-fake-123");
+        assertThat(response.name()).isEqualTo("Saylon Batista");
+
+        // Verificando se o "Segurança" do Spring foi realmente chamado para validar a senha
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
     }
 
     @Test
     @DisplayName("Deve lançar exceção quando o e-mail não existir no banco")
     void deveLancarExcecaoQuandoEmailNaoExistir() {
-        //O repositório retorna vazio para um e-mail não cadastrado
-        when(userRepository.findByEmail("inexistente@email.com")).thenReturn(Optional.empty());
         LoginRequest request = new LoginRequest("inexistente@email.com", "123456");
 
-        // Verificamos se a exceção correta é disparada e a mensagem de segurança
-        CredenciaisInvalidasException exception = assertThrows(CredenciaisInvalidasException.class, () -> {
-            authService.login(request);
-        });
+        // O AuthenticationManager falha se o UserDetailsService não achar o e-mail
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new BadCredentialsException("Usuário não encontrado"));
 
-        assertThat(exception.getMessage()).isEqualTo("E-mail ou senha inválidos!");
+        assertThrows(BadCredentialsException.class, () -> authService.login(request));
+
+        // Verifica se o Manager barrou, o código nem tentou buscar no Repository depois
+        verify(userRepository, never()).findByEmail(anyString());
     }
 
     @Test
-    @DisplayName("Deve lançar exceção quando a senha estiver incorreta")
-    void deveLancarExcecaoQuandoSenhaEstiverIncorreta() {
-        // Usuário existe, mas a senha enviada é diferente da armazenada
-        Perfil perfilFree = new Perfil("Free");
-        User usuarioNoBanco = new User("Maria Oliveira", "maria@email.com", "senha_correta", perfilFree);
+    @DisplayName("Deve falhar quando o AuthenticationManager barrar as credenciais")
+    void deveFalharQuandoCredenciaisIncorretas() {
 
-        when(userRepository.findByEmail("maria@email.com")).thenReturn(Optional.of(usuarioNoBanco));
-        LoginRequest request = new LoginRequest("maria@email.com", "senha_errada");
+        LoginRequest request = new LoginRequest("usuario@email.com", "senha_errada");
 
-        //O sistema deve barrar o acesso mesmo com e-mail correto
-        CredenciaisInvalidasException exception = assertThrows(CredenciaisInvalidasException.class, () -> {
-            authService.login(request);
-        });
+        // Simulamos que o validador de senhas lançou um erro de "Credenciais Inválidas"
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new BadCredentialsException("Senha incorreta"));
 
-        assertThat(exception.getMessage()).isEqualTo("E-mail ou senha inválidos!");
+        // Verificamos se o nosso serviço repassa esse erro corretamente
+        assertThrows(BadCredentialsException.class, () -> authService.login(request));
     }
 }
