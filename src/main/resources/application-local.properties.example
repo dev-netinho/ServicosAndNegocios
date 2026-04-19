@@ -8,3 +8,8 @@
 spring.datasource.url=jdbc:postgresql://aws-1-sa-east-1.pooler.supabase.com:5432/postgres?sslmode=require
 spring.datasource.username=postgres.uzcslldblziezlealehf
 spring.datasource.password=COLOQUE_A_SENHA_DO_POSTGRES_AQUI
+
+# --- CONFIGURAÇÃO JWT ---
+# Use uma chave aleatória no seu local.properties
+api.security.token.secret=INSIRA_UMA_CHAVE_BASE64_LONGA_AQUI
+api.security.token.expiration=7200000

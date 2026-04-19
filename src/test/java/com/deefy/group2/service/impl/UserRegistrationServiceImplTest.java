@@ -3,6 +3,7 @@ package com.deefy.group2.service.impl;
 import com.deefy.group2.dto.request.UserRegistrationRequest;
 import com.deefy.group2.exception.EmailJaCadastradoException;
 import com.deefy.group2.model.Perfil;
+import com.deefy.group2.model.User;
 import com.deefy.group2.repository.PerfilRepository;
 import com.deefy.group2.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -17,45 +19,56 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class) // Inicializa o Mockito para esta classe
+
+
+@ExtendWith(MockitoExtension.class)
 class UserRegistrationServiceImplTest {
 
     @Mock
-    private UserRepository userRepository; // Simula o banco de usuários
+    private UserRepository userRepository;
 
     @Mock
-    private PerfilRepository perfilRepository; // Simula o banco de perfis
+    private PerfilRepository perfilRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder; // Simula o "moedor" de senhas (BCrypt)
 
     @InjectMocks
-    private UserRegistrationServiceImpl registrationService; // Injeção
+    private UserRegistrationServiceImpl registrationService;
 
     @Test
-    void deveRegistrarUsuarioComSucesso() {
-        //Cenário (Given)
+    void deveRegistrarUsuarioComSenhaCriptografada() {
         UserRegistrationRequest request = new UserRegistrationRequest("Saylon", "saylon@email.com", "123456");
-        Perfil perfilFree = new Perfil("Free"); // Conforme o script do banco
+        Perfil perfilFree = new Perfil("Free");
 
-        // Simulamos que o e-mail não existe e que o perfil 'Free' existe
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
-        when(perfilRepository.findByNome("Free")).thenReturn(Optional.of(perfilFree));
+        // Configuramos as respostas do ambiente:
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty()); // E-mail está livre
+        when(perfilRepository.findByNome("Free")).thenReturn(Optional.of(perfilFree)); // Perfil Free existe
 
-        // Ação
+        // O encoder: se receber "123456", devolva a versão bagunçada (hash)
+        when(passwordEncoder.encode("123456")).thenReturn("hash_seguro_8899");
+
         registrationService.registrar(request);
 
-        //Verificação: // Garante que o método save foi chamado exatamente uma vez
-        verify(userRepository, times(1)).save(any());
+        // VERIFICAÇÃO CRÍTICA: O método save foi chamado?
+        // Usando 'any(User.class)' para conferir se um objeto do tipo User foi enviado ao banco.
+        verify(userRepository, times(1)).save(any(User.class));
+
+        // VERIFICAÇÃO DE SEGURANÇA: O serviço realmente usou o PasswordEncoder?
+        verify(passwordEncoder).encode("123456");
     }
 
     @Test
-    void deveLancarExcecaoQuandoEmailJaExiste() {
-        //Simulamos que o e-mail já está no banco
+    void naoDeveSalvarSeEmailJaExistir() {
         UserRegistrationRequest request = new UserRegistrationRequest("Saylon", "saylon@email.com", "123456");
-        when(userRepository.findByEmail("saylon@email.com")).thenReturn(Optional.of(mock(com.deefy.group2.model.User.class)));
 
-        //Verificar se dispara a nossa exceção customizada
+        // Simualando que o banco JÁ TEM esse e-mail
+        when(userRepository.findByEmail("saylon@email.com")).thenReturn(Optional.of(new User()));
+
+        // Verificamos se o sistema lança a nossa exceção customizada
         assertThrows(EmailJaCadastradoException.class, () -> registrationService.registrar(request));
 
-        //Garante que o sistema parou e NUNCA tentou salvar no banco
+        // Garantimos que, em caso de erro, o banco NUNCA foi chamado para salvar
         verify(userRepository, never()).save(any());
     }
 }
