@@ -1,18 +1,23 @@
 package com.deefy.group2.service;
 
+import com.deefy.group2.model.Playlist;
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 
+@Service
 public interface PlaylistService {
 
-    String criarPlaylist(String usuarioId, String nome, boolean publica);
+    String criarPlaylist(Long usuarioId, String nome, boolean publica);
 
-    void atualizarPlaylist(String playlistId, String usuarioId, String nome, boolean publica);
+    void atualizarPlaylist(Long playlistId, String nome, boolean publica);
 
-    void adicionarMusica(String playlistId, String usuarioId, String musicaId);
+    void adicionarMusica(Long playlistId, Long musicaId);
 
-    void removerMusica(String playlistId, String usuarioId, String musicaId);
+    void removerMusica(Long playlistId, Long musicaId);
 
-    void reordenarMusicas(String playlistId, String usuarioId, List<String> musicasOrdenadas);
+    void reordenarMusicas(Long playlistId, Long usuarioId, List<Long> musicasOrdenadas);
 
-    List<String> listarMusicasDaPlaylist(String playlistId, String usuarioId);
+    List<Long> listarMusicasDaPlaylist(Long playlistId);
+
 }
