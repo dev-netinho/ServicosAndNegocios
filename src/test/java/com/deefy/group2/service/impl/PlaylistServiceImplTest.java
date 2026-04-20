@@ -2,7 +2,10 @@ package com.deefy.group2.service.impl;
 
 import com.deefy.group2.dto.request.PlaylistRequest;
 import com.deefy.group2.dto.response.PlaylistResponse;
+import com.deefy.group2.exception.InvalidPlaylistNameException;
 import com.deefy.group2.exception.MusicNotFoundException;
+import com.deefy.group2.exception.MusicInvalidOrderPlaylistException;
+import com.deefy.group2.exception.MusicIsNotOnPlaylistException;
 import com.deefy.group2.exception.PlaylistAccessDeniedException;
 import com.deefy.group2.exception.PlaylistDomainException;
 import com.deefy.group2.exception.UserNotFoundException;
@@ -74,7 +77,7 @@ class PlaylistServiceImplTest {
         PlaylistRequest request = new PlaylistRequest(7L, "   ", false);
 
         assertThatThrownBy(() -> playlistService.criarPlaylist(request))
-                .isInstanceOf(PlaylistDomainException.class)
+                .isInstanceOf(InvalidPlaylistNameException.class)
                 .hasMessageContaining("nome");
 
         verify(playlistRepository, never()).save(any());
@@ -183,7 +186,7 @@ class PlaylistServiceImplTest {
         when(playlistRepository.findById(20L)).thenReturn(Optional.of(playlist));
 
         assertThatThrownBy(() -> playlistService.removerMusica(20L, 7L, 1L))
-                .isInstanceOf(PlaylistDomainException.class)
+                .isInstanceOf(MusicIsNotOnPlaylistException.class)
                 .hasMessageContaining("nao esta presente");
     }
 
@@ -217,7 +220,7 @@ class PlaylistServiceImplTest {
         when(playlistRepository.findById(20L)).thenReturn(Optional.of(playlist));
 
         assertThatThrownBy(() -> playlistService.reordenarMusicas(20L, 7L, List.of(1L, 3L)))
-                .isInstanceOf(PlaylistDomainException.class)
+                .isInstanceOf(MusicInvalidOrderPlaylistException.class)
                 .hasMessageContaining("nova ordem");
     }
 

@@ -2,7 +2,10 @@ package com.deefy.group2.service.impl;
 
 import com.deefy.group2.dto.request.PlaylistRequest;
 import com.deefy.group2.dto.response.PlaylistResponse;
+import com.deefy.group2.exception.InvalidPlaylistNameException;
 import com.deefy.group2.exception.MusicNotFoundException;
+import com.deefy.group2.exception.MusicInvalidOrderPlaylistException;
+import com.deefy.group2.exception.MusicIsNotOnPlaylistException;
 import com.deefy.group2.exception.PlaylistAccessDeniedException;
 import com.deefy.group2.exception.PlaylistDomainException;
 import com.deefy.group2.exception.PlaylistNotFoundException;
@@ -83,7 +86,7 @@ public class PlaylistServiceImpl implements PlaylistService {
         boolean removed = playlist.removeFirstTrackByMusicId(musicaId);
 
         if (!removed) {
-            throw new PlaylistDomainException("A musica informada nao esta presente na playlist.");
+            throw new MusicIsNotOnPlaylistException("A musica informada nao esta presente na playlist.");
         }
 
         Playlist saved = playlistRepository.save(playlist);
@@ -152,7 +155,7 @@ public class PlaylistServiceImpl implements PlaylistService {
 
     private static void validateName(String nome) {
         if (nome == null || nome.strip().isEmpty()) {
-            throw new PlaylistDomainException("O nome da playlist e obrigatorio.");
+            throw new InvalidPlaylistNameException("O nome da playlist e obrigatorio.");
         }
     }
 
@@ -162,13 +165,13 @@ public class PlaylistServiceImpl implements PlaylistService {
 
     private static void validateTrackOrder(Playlist playlist, List<Long> musicasOrdenadas) {
         if (musicasOrdenadas == null) {
-            throw new PlaylistDomainException("A nova ordem de musicas e obrigatoria.");
+            throw new MusicInvalidOrderPlaylistException("A nova ordem de musicas e obrigatoria.");
         }
 
         List<Long> currentIds = playlist.getTrackIds();
         if (currentIds.size() != musicasOrdenadas.size()
                 || !countOccurrences(currentIds).equals(countOccurrences(musicasOrdenadas))) {
-            throw new PlaylistDomainException(
+            throw new MusicInvalidOrderPlaylistException(
                     "A nova ordem deve conter exatamente as musicas atuais da playlist.");
         }
     }
