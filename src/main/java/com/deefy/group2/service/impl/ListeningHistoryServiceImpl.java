@@ -2,7 +2,6 @@ package com.deefy.group2.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import com.deefy.group2.exception.HistoryNotFoundException;
 import com.deefy.group2.exception.MusicNotFoundException;
@@ -62,7 +61,11 @@ public class ListeningHistoryServiceImpl implements ListeningHistoryService {
             throw new UserNotFoundException("User not found with id: " + userId);
         }
 
-        Optional<ListeningHistory> history = Optional.ofNullable(listeningHistoryRepository.findById(userId).orElseThrow(() -> new HistoryNotFoundException("not found")));
+        List<ListeningHistory> history = listeningHistoryRepository.findAllByUserIdOrderByDataHoraExecucaoDesc(userId);
+
+        if (history.isEmpty()) {
+            throw new HistoryNotFoundException("Listening history not found for user id: " + userId);
+        }
 
         return history.stream()
                 .map(listeningHistoryMapper::toResponse)
