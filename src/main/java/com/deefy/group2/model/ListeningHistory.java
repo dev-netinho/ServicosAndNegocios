@@ -30,7 +30,7 @@ public class ListeningHistory {
     private Music music;
 
 
-    @Column(name = "data_hora_execucao", nullable = false)
+    @Column(name = "dataHoraExecucao", nullable = false)
     private LocalDateTime dataHoraExecucao;
 
     public ListeningHistory() {

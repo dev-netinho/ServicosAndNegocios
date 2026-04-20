@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 @Entity
 @Table(name = "usuario")
@@ -67,8 +68,11 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // prefixo "ROLE_" para usar hasRole()
-        return List.of(new SimpleGrantedAuthority("ROLE_" + perfil.getNome().toUpperCase()));
+        if (perfil == null || perfil.getNome() == null || perfil.getNome().isBlank()) {
+            return List.of();
+        }
+
+        return List.of(new SimpleGrantedAuthority("ROLE_" + normalizeRoleName(perfil.getNome())));
     }
 
     @Override
@@ -109,4 +113,13 @@ public class User implements UserDetails {
     @Override
     // A conta não está ativa?
     public boolean isEnabled() { return true; }
+
+    private static String normalizeRoleName(String nomePerfil) {
+        String normalized = nomePerfil.strip().toUpperCase(Locale.ROOT);
+        return switch (normalized) {
+            case "ADMINISTRADOR" -> "ADMIN";
+            case "OUVINTE" -> "COMUM";
+            default -> normalized;
+        };
+    }
 }

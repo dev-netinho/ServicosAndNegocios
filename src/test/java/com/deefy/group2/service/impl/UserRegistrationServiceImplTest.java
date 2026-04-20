@@ -39,11 +39,11 @@ class UserRegistrationServiceImplTest {
     @Test
     void deveRegistrarUsuarioComSenhaCriptografada() {
         UserRegistrationRequest request = new UserRegistrationRequest("Saylon", "saylon@email.com", "123456");
-        Perfil perfilFree = new Perfil("Free");
+        Perfil perfilOuvinte = new Perfil("Ouvinte");
 
         // Configuramos as respostas do ambiente:
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty()); // E-mail está livre
-        when(perfilRepository.findByNome("Free")).thenReturn(Optional.of(perfilFree)); // Perfil Free existe
+        when(perfilRepository.findByNome("Ouvinte")).thenReturn(Optional.of(perfilOuvinte));
 
         // O encoder: se receber "123456", devolva a versão bagunçada (hash)
         when(passwordEncoder.encode("123456")).thenReturn("hash_seguro_8899");
@@ -56,6 +56,21 @@ class UserRegistrationServiceImplTest {
 
         // VERIFICAÇÃO DE SEGURANÇA: O serviço realmente usou o PasswordEncoder?
         verify(passwordEncoder).encode("123456");
+    }
+
+    @Test
+    void deveUsarPerfilFreeComoFallbackQuandoOuvinteNaoExistir() {
+        UserRegistrationRequest request = new UserRegistrationRequest("Saylon", "saylon@email.com", "123456");
+        Perfil perfilFree = new Perfil("Free");
+
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(perfilRepository.findByNome("Ouvinte")).thenReturn(Optional.empty());
+        when(perfilRepository.findByNome("Free")).thenReturn(Optional.of(perfilFree));
+        when(passwordEncoder.encode("123456")).thenReturn("hash_seguro_8899");
+
+        registrationService.registrar(request);
+
+        verify(userRepository).save(any(User.class));
     }
 
     @Test

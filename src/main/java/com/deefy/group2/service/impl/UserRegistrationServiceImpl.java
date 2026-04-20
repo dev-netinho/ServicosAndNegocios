@@ -36,9 +36,10 @@ public class UserRegistrationServiceImpl implements UserRegistrationService {
             throw new EmailJaCadastradoException("Este e-mail já está cadastrado!");
         }
 
-        //Atribuição de Perfil: Busca o perfil 'Free' no banco para novos usuários
-        Perfil perfilPadrao = perfilRepository.findByNome("Free")
-                .orElseThrow(() -> new RuntimeException("Erro: Perfil padrão 'Free' não configurado."));
+        // Adapta o cadastro para os perfis já existentes nos bancos conhecidos do projeto.
+        Perfil perfilPadrao = perfilRepository.findByNome("Ouvinte")
+                .or(() -> perfilRepository.findByNome("Free"))
+                .orElseThrow(() -> new RuntimeException("Erro: perfil padrão de usuário não configurado."));
 
         //Cria a entidade User associando os dados recebidos e o perfil padrão
         User newUser = new User(

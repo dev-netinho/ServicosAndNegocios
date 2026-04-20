@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +35,9 @@ public class Playlist {
     @Column(name = "publica", nullable = false)
     private boolean publica;
 
+    @Column(name = "dataCriacao", nullable = false)
+    private LocalDateTime dataCriacao;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "playlist_musica",
@@ -45,11 +49,12 @@ public class Playlist {
     protected Playlist() {
     }
 
-    public Playlist(Long id, User owner, String name, boolean publica, List<Music> tracks) {
+    public Playlist(Long id, User owner, String name, boolean publica, LocalDateTime dataCriacao, List<Music> tracks) {
         this.id = id;
         this.owner = owner;
         this.name = name;
         this.publica = publica;
+        this.dataCriacao = dataCriacao;
         this.tracks = tracks == null ? new ArrayList<>() : new ArrayList<>(tracks);
     }
 
@@ -81,6 +86,14 @@ public class Playlist {
         this.publica = publica;
     }
 
+    public LocalDateTime getDataCriacao() {
+        return dataCriacao;
+    }
+
+    public void setDataCriacao(LocalDateTime dataCriacao) {
+        this.dataCriacao = dataCriacao;
+    }
+
     public List<Music> getTracks() {
         return tracks;
     }
@@ -91,6 +104,11 @@ public class Playlist {
 
     public void addTrack(Music music) {
         tracks.add(music);
+    }
+
+    public boolean hasTrackWithMusicId(Long musicId) {
+        return tracks.stream()
+                .anyMatch(track -> track.getId() != null && track.getId().equals(musicId));
     }
 
     public boolean removeFirstTrackByMusicId(Long musicId) {

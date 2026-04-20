@@ -43,7 +43,7 @@ class UserAuthenticationServiceImplTest {
     @DisplayName("Deve autenticar com sucesso e retornar o token real")
     void deveAutenticarComSucesso() {
         // Preparamos os dados de teste
-        Perfil perfil = new Perfil("Free");
+        Perfil perfil = new Perfil("Ouvinte");
         User usuarioValido = new User("Saylon Batista", "saylon@email.com", "123456", perfil);
         LoginRequest request = new LoginRequest("saylon@email.com", "123456");
 

@@ -3,6 +3,7 @@ package com.deefy.group2.service.impl;
 import com.deefy.group2.dto.request.PlaylistRequest;
 import com.deefy.group2.dto.response.PlaylistResponse;
 import com.deefy.group2.exception.InvalidPlaylistNameException;
+import com.deefy.group2.exception.MusicAlreadyOnPlaylistException;
 import com.deefy.group2.exception.MusicNotFoundException;
 import com.deefy.group2.exception.MusicInvalidOrderPlaylistException;
 import com.deefy.group2.exception.MusicIsNotOnPlaylistException;
@@ -22,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,7 +60,13 @@ class PlaylistServiceImplTest {
         when(playlistRepository.save(any(Playlist.class)))
                 .thenAnswer(invocation -> {
                     Playlist playlist = invocation.getArgument(0);
-                    return new Playlist(10L, playlist.getOwner(), playlist.getName(), playlist.isPublica(), playlist.getTracks());
+                    return new Playlist(
+                            10L,
+                            playlist.getOwner(),
+                            playlist.getName(),
+                            playlist.isPublica(),
+                            playlist.getDataCriacao(),
+                            playlist.getTracks());
                 });
 
         PlaylistResponse response = playlistService.criarPlaylist(request);
@@ -69,6 +77,7 @@ class PlaylistServiceImplTest {
         assertThat(response.publica()).isTrue();
         assertThat(response.musicaIds()).isEmpty();
         assertThat(response.quantidadeMusicas()).isZero();
+        assertThat(response.id()).isEqualTo(10L);
     }
 
     @Test
@@ -99,7 +108,7 @@ class PlaylistServiceImplTest {
     @DisplayName("Deve atualizar playlist quando usuario for o dono")
     void deveAtualizarPlaylistQuandoUsuarioForODono() {
         User owner = user(7L);
-        Playlist playlist = new Playlist(20L, owner, "Antiga", false, List.of());
+        Playlist playlist = playlist(20L, owner, "Antiga", false, List.of());
 
         when(userRepository.existsById(7L)).thenReturn(true);
         when(playlistRepository.findById(20L)).thenReturn(Optional.of(playlist));
@@ -116,7 +125,7 @@ class PlaylistServiceImplTest {
     @DisplayName("Deve impedir edicao por usuario que nao seja dono")
     void deveImpedirEdicaoPorUsuarioQueNaoSejaDono() {
         User owner = user(7L);
-        Playlist playlist = new Playlist(20L, owner, "Antiga", false, List.of());
+        Playlist playlist = playlist(20L, owner, "Antiga", false, List.of());
 
         when(userRepository.existsById(9L)).thenReturn(true);
         when(playlistRepository.findById(20L)).thenReturn(Optional.of(playlist));
@@ -131,7 +140,7 @@ class PlaylistServiceImplTest {
     void deveAdicionarMusicaAPlaylist() {
         User owner = user(7L);
         Music music = music(30L);
-        Playlist playlist = new Playlist(20L, owner, "Minha", true, List.of());
+        Playlist playlist = playlist(20L, owner, "Minha", true, List.of());
 
         when(userRepository.existsById(7L)).thenReturn(true);
         when(playlistRepository.findById(20L)).thenReturn(Optional.of(playlist));
@@ -145,10 +154,26 @@ class PlaylistServiceImplTest {
     }
 
     @Test
+    @DisplayName("Deve impedir musica duplicada na playlist")
+    void deveImpedirMusicaDuplicadaNaPlaylist() {
+        User owner = user(7L);
+        Music music = music(30L);
+        Playlist playlist = playlist(20L, owner, "Minha", true, List.of(music));
+
+        when(userRepository.existsById(7L)).thenReturn(true);
+        when(playlistRepository.findById(20L)).thenReturn(Optional.of(playlist));
+        when(musicRepository.findById(30L)).thenReturn(Optional.of(music));
+
+        assertThatThrownBy(() -> playlistService.adicionarMusica(20L, 7L, 30L))
+                .isInstanceOf(MusicAlreadyOnPlaylistException.class)
+                .hasMessageContaining("presente");
+    }
+
+    @Test
     @DisplayName("Deve lancar erro ao adicionar musica inexistente")
     void deveLancarErroAoAdicionarMusicaInexistente() {
         User owner = user(7L);
-        Playlist playlist = new Playlist(20L, owner, "Minha", true, List.of());
+        Playlist playlist = playlist(20L, owner, "Minha", true, List.of());
 
         when(userRepository.existsById(7L)).thenReturn(true);
         when(playlistRepository.findById(20L)).thenReturn(Optional.of(playlist));
@@ -165,7 +190,7 @@ class PlaylistServiceImplTest {
         User owner = user(7L);
         Music first = music(1L);
         Music second = music(2L);
-        Playlist playlist = new Playlist(20L, owner, "Minha", true, List.of(first, second));
+        Playlist playlist = playlist(20L, owner, "Minha", true, List.of(first, second));
 
         when(userRepository.existsById(7L)).thenReturn(true);
         when(playlistRepository.findById(20L)).thenReturn(Optional.of(playlist));
@@ -180,7 +205,7 @@ class PlaylistServiceImplTest {
     @DisplayName("Deve lancar erro ao remover musica ausente")
     void deveLancarErroAoRemoverMusicaAusente() {
         User owner = user(7L);
-        Playlist playlist = new Playlist(20L, owner, "Minha", true, List.of(music(2L)));
+        Playlist playlist = playlist(20L, owner, "Minha", true, List.of(music(2L)));
 
         when(userRepository.existsById(7L)).thenReturn(true);
         when(playlistRepository.findById(20L)).thenReturn(Optional.of(playlist));
@@ -197,7 +222,7 @@ class PlaylistServiceImplTest {
         Music first = music(1L);
         Music second = music(2L);
         Music third = music(3L);
-        Playlist playlist = new Playlist(20L, owner, "Minha", true, List.of(first, second, third));
+        Playlist playlist = playlist(20L, owner, "Minha", true, List.of(first, second, third));
 
         when(userRepository.existsById(7L)).thenReturn(true);
         when(playlistRepository.findById(20L)).thenReturn(Optional.of(playlist));
@@ -214,7 +239,7 @@ class PlaylistServiceImplTest {
         User owner = user(7L);
         Music first = music(1L);
         Music second = music(2L);
-        Playlist playlist = new Playlist(20L, owner, "Minha", true, List.of(first, second));
+        Playlist playlist = playlist(20L, owner, "Minha", true, List.of(first, second));
 
         when(userRepository.existsById(7L)).thenReturn(true);
         when(playlistRepository.findById(20L)).thenReturn(Optional.of(playlist));
@@ -228,7 +253,7 @@ class PlaylistServiceImplTest {
     @DisplayName("Deve impedir leitura de playlist privada por outro usuario")
     void deveImpedirLeituraDePlaylistPrivadaPorOutroUsuario() {
         User owner = user(7L);
-        Playlist playlist = new Playlist(20L, owner, "Privada", false, List.of());
+        Playlist playlist = playlist(20L, owner, "Privada", false, List.of());
 
         when(playlistRepository.findById(20L)).thenReturn(Optional.of(playlist));
 
@@ -247,5 +272,9 @@ class PlaylistServiceImplTest {
         Music music = mock(Music.class);
         when(music.getId()).thenReturn(id);
         return music;
+    }
+
+    private static Playlist playlist(Long id, User owner, String name, boolean publica, List<Music> tracks) {
+        return new Playlist(id, owner, name, publica, LocalDateTime.of(2026, 4, 20, 14, 0), tracks);
     }
 }

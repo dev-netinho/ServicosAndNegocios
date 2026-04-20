@@ -3,6 +3,7 @@ package com.deefy.group2.service.impl;
 import com.deefy.group2.dto.request.PlaylistRequest;
 import com.deefy.group2.dto.response.PlaylistResponse;
 import com.deefy.group2.exception.InvalidPlaylistNameException;
+import com.deefy.group2.exception.MusicAlreadyOnPlaylistException;
 import com.deefy.group2.exception.MusicNotFoundException;
 import com.deefy.group2.exception.MusicInvalidOrderPlaylistException;
 import com.deefy.group2.exception.MusicIsNotOnPlaylistException;
@@ -20,6 +21,7 @@ import com.deefy.group2.service.PlaylistService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,7 +54,13 @@ public class PlaylistServiceImpl implements PlaylistService {
         User owner = userRepository.findById(request.usuarioId())
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + request.usuarioId()));
 
-        Playlist playlist = new Playlist(null, owner, normalizeName(request.nome()), request.publica(), List.of());
+        Playlist playlist = new Playlist(
+                null,
+                owner,
+                normalizeName(request.nome()),
+                request.publica(),
+                LocalDateTime.now(),
+                List.of());
         Playlist saved = playlistRepository.save(playlist);
         return PlaylistResponse.from(saved);
     }
@@ -74,6 +82,10 @@ public class PlaylistServiceImpl implements PlaylistService {
         Playlist playlist = findOwnedPlaylist(playlistId, usuarioId);
         Music music = musicRepository.findById(musicaId)
                 .orElseThrow(() -> new MusicNotFoundException(musicaId));
+
+        if (playlist.hasTrackWithMusicId(musicaId)) {
+            throw new MusicAlreadyOnPlaylistException("A musica informada ja esta presente na playlist.");
+        }
 
         playlist.addTrack(music);
         Playlist saved = playlistRepository.save(playlist);
