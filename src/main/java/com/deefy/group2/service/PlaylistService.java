@@ -1,18 +1,21 @@
 package com.deefy.group2.service;
 
+import com.deefy.group2.dto.request.PlaylistRequest;
+import com.deefy.group2.dto.response.PlaylistResponse;
+
 import java.util.List;
 
 public interface PlaylistService {
 
-    String criarPlaylist(String usuarioId, String nome, boolean publica);
+    PlaylistResponse criarPlaylist(PlaylistRequest request);
 
-    void atualizarPlaylist(String playlistId, String usuarioId, String nome, boolean publica);
+    PlaylistResponse atualizarPlaylist(Long playlistId, PlaylistRequest request);
 
-    void adicionarMusica(String playlistId, String usuarioId, String musicaId);
+    PlaylistResponse adicionarMusica(Long playlistId, Long usuarioId, Long musicaId);
 
-    void removerMusica(String playlistId, String usuarioId, String musicaId);
+    PlaylistResponse removerMusica(Long playlistId, Long usuarioId, Long musicaId);
 
-    void reordenarMusicas(String playlistId, String usuarioId, List<String> musicasOrdenadas);
+    PlaylistResponse reordenarMusicas(Long playlistId, Long usuarioId, List<Long> musicasOrdenadas);
 
-    List<String> listarMusicasDaPlaylist(String playlistId, String usuarioId);
+    List<Long> listarMusicasDaPlaylist(Long playlistId, Long usuarioId);
 }
