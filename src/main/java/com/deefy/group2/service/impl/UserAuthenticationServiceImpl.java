@@ -7,18 +7,25 @@ import com.deefy.group2.model.User;
 import com.deefy.group2.repository.UserRepository;
 import com.deefy.group2.security.JwtService;
 import com.deefy.group2.service.UserAuthenticationService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class UserAuthenticationServiceImpl implements UserAuthenticationService {
 
     private final UserRepository userRepository;
     private final JwtService jwtService; //Gerador de tokens
     private final AuthenticationManager authenticationManager; //O "validador" oficial
+
+    public UserAuthenticationServiceImpl(
+            UserRepository userRepository,
+            JwtService jwtService,
+            AuthenticationManager authenticationManager) {
+        this.userRepository = userRepository;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+    }
 
 
     @Override

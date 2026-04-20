@@ -44,12 +44,7 @@ class UserAuthenticationServiceImplTest {
     void deveAutenticarComSucesso() {
         // Preparamos os dados de teste
         Perfil perfil = new Perfil("Free");
-        User usuarioValido = User.builder()
-                .name("Saylon Batista")
-                .email("saylon@email.com")
-                .password("123456")
-                .perfil(perfil)
-                .build();
+        User usuarioValido = new User("Saylon Batista", "saylon@email.com", "123456", perfil);
         LoginRequest request = new LoginRequest("saylon@email.com", "123456");
 
 

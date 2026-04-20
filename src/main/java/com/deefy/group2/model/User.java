@@ -1,7 +1,6 @@
 package com.deefy.group2.model;
 
 import jakarta.persistence.*;
-import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,34 +10,60 @@ import java.util.List;
 
 @Entity
 @Table(name = "usuario")
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // O novo banco usa SERIAL
-    @Setter(AccessLevel.NONE)
     private Long id;
 
     @Column(name = "nome", nullable = false, length = 100)
-    @Setter
     private String name;
 
     @Column(name = "email", nullable = false, unique = true, length = 100)
-    @Setter
     private String email;
 
     @Column(name = "senha", nullable = false, length = 100)
-    @Setter
     private String password;
 
     // A MÁGICA DO RBAC AQUI: Ligando o usuário ao perfil
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "perfil_id")
-    @Setter(AccessLevel.PROTECTED)
     private Perfil perfil;
+
+    public User() {
+    }
+
+    public User(Long id, String name, String email, String password, Perfil perfil) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.perfil = perfil;
+    }
+
+    public User(String name, String email, String password, Perfil perfil) {
+        this(null, name, email, password, perfil);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -55,6 +80,18 @@ public class User implements UserDetails {
     @Override
     public String getPassword() {
         return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Perfil getPerfil() {
+        return perfil;
+    }
+
+    public void setPerfil(Perfil perfil) {
+        this.perfil = perfil;
     }
 
     @Override

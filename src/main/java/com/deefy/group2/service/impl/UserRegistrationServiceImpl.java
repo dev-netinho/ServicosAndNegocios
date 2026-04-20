@@ -7,18 +7,25 @@ import com.deefy.group2.model.User;
 import com.deefy.group2.repository.PerfilRepository;
 import com.deefy.group2.repository.UserRepository;
 import com.deefy.group2.service.UserRegistrationService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor // vai gerar os construtores das minhas variaveis finais
 public class UserRegistrationServiceImpl implements UserRegistrationService {
 
     private final UserRepository userRepository;
     private final PerfilRepository perfilRepository;
     private final PasswordEncoder passwordEncoder;
+
+    public UserRegistrationServiceImpl(
+            UserRepository userRepository,
+            PerfilRepository perfilRepository,
+            PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.perfilRepository = perfilRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
 
     @Override
@@ -34,12 +41,11 @@ public class UserRegistrationServiceImpl implements UserRegistrationService {
                 .orElseThrow(() -> new RuntimeException("Erro: Perfil padrão 'Free' não configurado."));
 
         //Cria a entidade User associando os dados recebidos e o perfil padrão
-        User newUser = User.builder()
-                .name(request.name())
-                .email(request.email())
-                .password(passwordEncoder.encode(request.password())) // A mágica acontece aqui!
-                .perfil(perfilPadrao)
-                .build();
+        User newUser = new User(
+                request.name(),
+                request.email(),
+                passwordEncoder.encode(request.password()),
+                perfilPadrao);
 
         //Registra o novo usuário no banco de dados (PostgreSQL/Supabase)
         userRepository.save(newUser);
